@@ -1,13 +1,19 @@
 spring:
+
   datasource:
     url: jdbc:h2:tcp://localhost/~/ago_be
     username: sa
     password:
     driver-class-name: org.h2.Driver
 
+#  운영 장비에서는 절대 crate, create-drop, update 사용하면 안된다.
+#  개발 초기 단계는 create 또는 update
+#  테스트 서버는 update 또는 validate
+#  스테이징과 운영 서버는 validate 또는 none
+
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
 #        show_sql: true
@@ -17,3 +23,9 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type: trace
+
+springdoc:
+  api-docs:
+    path: /api/docs/open-api
+  swagger-ui:
+    path: /api/docs/swagger-ui
