@@ -15,7 +15,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/")
+    @GetMapping
     public UserResponseDto getUser(Authentication authentication) {
         PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
         return userService.getUserInfo(principal.getUser().getId());
