@@ -31,10 +31,10 @@ public class AuthServiceTest {
         UserRequestDto userRequestDto = UserRequestDto.builder().nickname("kim").password("1234").email("kim@naver.com").build();
 
         //when
-        UserResponseDto userResponseDto = authService.join(userRequestDto);
+        User user = authService.join(userRequestDto);
 
         //then
-        User findUser = userRepository.findByEmail(userResponseDto.getEmail());
+        User findUser = userRepository.findByEmail(user.getEmail());
         System.out.println("findUser = " + findUser);
         assertEquals(userRequestDto.getEmail(), findUser.getEmail());
     }

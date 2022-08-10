@@ -19,16 +19,12 @@ public class AuthService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Transactional
-    public UserResponseDto join(UserRequestDto userRequestDto) {
+    public User join(UserRequestDto userRequestDto) {
         String encPassword = bCryptPasswordEncoder.encode(userRequestDto.getPassword());
         userRequestDto.setPassword(encPassword);
         User user = userRequestDto.toEntity();
         validateDuplicateUser(user); // 이메일로 중복 회원 검증
-        userRepository.save(user);
-        return UserResponseDto.builder()
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .build();
+        return userRepository.save(user);
     }
 
     private void validateDuplicateUser(User user) {

@@ -8,14 +8,17 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity(name = "USERS")
+@Entity(name = "users")
 @Getter @Setter
 @NoArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -32,6 +35,9 @@ public class User {
 
     @CreationTimestamp
     private Timestamp createDate;
+
+    @OneToMany(mappedBy = "user")
+    private List<APILog> apiLogs = new ArrayList<>();
 
     @Builder
     public User(Long id, String email, String password, String nickname, Authority authority, Timestamp createDate) {

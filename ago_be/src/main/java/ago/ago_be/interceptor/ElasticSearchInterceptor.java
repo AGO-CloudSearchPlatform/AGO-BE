@@ -1,12 +1,17 @@
 package ago.ago_be.interceptor;
 
+import ago.ago_be.config.auth.PrincipalDetails;
+import ago.ago_be.domain.APILog;
+import ago.ago_be.repository.APILogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.persistence.Column;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
@@ -20,11 +25,15 @@ import java.net.URI;
 public class ElasticSearchInterceptor implements HandlerInterceptor {
 
     private final RestTemplate restTemplate;
+    private final APILogRepository apiLogRepository;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String baseURL = "http://ec2-43-200-170-171.ap-northeast-2.compute.amazonaws.com:8080";
-        String path = request.getRequestURI().replace("/api/es", "");
+        PrincipalDetails principalDetails = (PrincipalDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = principalDetails.getUser().getId();
+
+        String baseURL = "http://ec2-43-200-174-150.ap-northeast-2.compute.amazonaws.com:8080";
+        String path = "/user" + userId + request.getRequestURI().replace("/api/es", "");
         String queryString = request.getQueryString();
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUriString(baseURL).path(path);
 
@@ -38,6 +47,8 @@ public class ElasticSearchInterceptor implements HandlerInterceptor {
 
         ResponseEntity<String> result = null;
         String method = request.getMethod();
+
+        long beforeTime = System.currentTimeMillis();
         if (method.equals("GET")) {
             result = restTemplate.getForEntity(uri, String.class);
         } else if (method.equals("POST")) {
@@ -57,9 +68,32 @@ public class ElasticSearchInterceptor implements HandlerInterceptor {
         } else if (method.equals("DELETE")) {
             result = restTemplate.exchange(uri, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
         }
+        long afterTime = System.currentTimeMillis();
+
+        response.setStatus(result.getStatusCodeValue());
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
         response.getWriter().write(result.getBody());
+
+        if (method.equals("GET")) {
+            return false;
+        }
+        String url = path.replace("/user" + userId, "");
+        if (queryString != null) {
+            url += "?" + queryString;
+        }
+        String indexName = url.split("/")[1];
+        int processingTime = Long.valueOf(afterTime - beforeTime).intValue();
+        APILog apiLog = APILog.builder()
+                .user(principalDetails.getUser())
+                .indexName(indexName)
+                .url(url)
+                .method(method)
+                .responseCode(response.getStatus())
+                .processingTime(processingTime)
+                .build();
+        apiLogRepository.save(apiLog);
+
         return false;
     }
 

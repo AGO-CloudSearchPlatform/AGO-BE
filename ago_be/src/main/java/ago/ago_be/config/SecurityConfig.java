@@ -47,7 +47,7 @@ public class SecurityConfig {
             AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
             JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager);
             jwtAuthenticationFilter.setFilterProcessesUrl("/api/auth/login");
-            http.addFilter(corsFilter) // @CrossOrigin(인증X), 시큐리티 필터에 등록(인증O)
+            http.addFilter(corsFilter)
                     .addFilter(jwtAuthenticationFilter)
                     .addFilter(new JwtAuthorizationFilter(authenticationManager, userRepository));
 
