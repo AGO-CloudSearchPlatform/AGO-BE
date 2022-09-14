@@ -82,7 +82,11 @@ public class ElasticSearchInterceptor implements HandlerInterceptor {
         if (queryString != null) {
             url += "?" + queryString;
         }
-        String indexName = url.split("/")[1];
+        String[] splitList = url.split("/");
+        String indexName = splitList[1];
+        if (splitList.length >= 3 && splitList[2].equals("_search")) {
+            return false;
+        }
         int processingTime = Long.valueOf(afterTime - beforeTime).intValue();
         APILog apiLog = APILog.builder()
                 .user(principalDetails.getUser())

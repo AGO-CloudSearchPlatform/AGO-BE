@@ -55,4 +55,10 @@ public class UserService {
                 .nickname(user.getNickname())
                 .build();
     }
+
+    @Transactional
+    public void updateRefreshToken(String email, String refreshToken) {
+        User user = userRepository.findByEmail(email);
+        user.setRefreshToken(refreshToken);
+    }
 }

@@ -2,6 +2,7 @@ package ago.ago_be.jwt;
 
 import ago.ago_be.config.auth.PrincipalDetails;
 import ago.ago_be.dto.UserRequestDto;
+import ago.ago_be.service.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +24,7 @@ import java.util.Date;
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -46,13 +48,24 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         PrincipalDetails principalDetails = (PrincipalDetails) authResult.getPrincipal();
 
-        String jwtToken = JWT.create()
+        String accessToken = JWT.create()
                 .withSubject(principalDetails.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.EXPIRATION_TIME))
+                .withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.AT_EXP_TIME))
                 .withClaim("id", principalDetails.getUser().getId())
                 .withClaim("email", principalDetails.getUser().getEmail())
+                .withIssuedAt(new Date(System.currentTimeMillis()))
                 .sign(Algorithm.HMAC512(JwtProperties.SECRET));
 
-        response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX + jwtToken);
+        String refreshToken = JWT.create()
+                .withSubject(principalDetails.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.RT_EXP_TIME))
+                .withIssuedAt(new Date(System.currentTimeMillis()))
+                .sign(Algorithm.HMAC512(JwtProperties.SECRET));
+
+        // DB에 Refresh Token 저장
+        userService.updateRefreshToken(principalDetails.getUsername(), refreshToken);
+
+        response.addHeader(JwtProperties.AT_HEADER, JwtProperties.TOKEN_PREFIX + accessToken);
+        response.addHeader(JwtProperties.RT_HEADER, JwtProperties.TOKEN_PREFIX + refreshToken);
     }
 }

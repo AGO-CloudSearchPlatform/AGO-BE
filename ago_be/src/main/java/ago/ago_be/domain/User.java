@@ -30,6 +30,8 @@ public class User {
     @Column(nullable = false)
     private String nickname;
 
+    private String refreshToken;
+
     @Enumerated(EnumType.STRING)
     private Authority authority; //ROLE_USER, ROLE_ADMIN
 
