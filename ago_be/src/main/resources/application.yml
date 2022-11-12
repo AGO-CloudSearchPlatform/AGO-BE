@@ -35,3 +35,11 @@ springdoc:
     path: /api/docs/open-api
   swagger-ui:
     path: /api/docs/swagger-ui
+
+elasticsearch:
+  local:
+    ip: 127.0.0.1
+    port: 9200
+  prod:
+    ip: 15.165.85.178
+    port: 9200

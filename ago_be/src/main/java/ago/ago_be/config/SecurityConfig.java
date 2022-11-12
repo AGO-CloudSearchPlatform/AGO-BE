@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/api/docs/**").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/api/v1/**").permitAll()
                 .anyRequest().authenticated();
         return http.build();
     }

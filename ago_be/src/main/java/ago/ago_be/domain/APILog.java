@@ -19,8 +19,8 @@ public class APILog {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "index_id")
+    private Index index;
 
     @Column(nullable = false)
     private String indexName;
@@ -41,9 +41,9 @@ public class APILog {
     private int processingTime;
 
     @Builder
-    public APILog(Long id, User user, String indexName, String url, String method, int responseCode, Timestamp time, int processingTime) {
+    public APILog(Long id, Index index, String indexName, String url, String method, int responseCode, Timestamp time, int processingTime) {
         this.id = id;
-        this.user = user;
+        this.index = index;
         this.indexName = indexName;
         this.url = url;
         this.method = method;

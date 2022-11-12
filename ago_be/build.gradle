@@ -29,12 +29,19 @@ dependencies {
 	// https://mvnrepository.com/artifact/com.auth0/java-jwt
 	implementation 'com.auth0:java-jwt:3.19.2'
 
+	// https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-high-level-client
+	implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.10.2'
+	// https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
+	implementation 'org.elasticsearch.client:elasticsearch-rest-client:7.10.2'
+	// https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch
+	implementation 'org.elasticsearch:elasticsearch:7.10.2'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'mysql:mysql-connector-java'
 	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 

@@ -36,14 +36,13 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         String servletPath = request.getServletPath();
         String header = request.getHeader(JwtProperties.HEADER_STRING);
 
-        if (servletPath.startsWith("/api/auth/") || servletPath.startsWith("/api/docs/")) {
+        if (servletPath.startsWith("/api/auth/") || servletPath.startsWith("/api/docs/") || servletPath.startsWith("/api/v1/")) {
             chain.doFilter(request, response);
         } else if (header == null || !header.startsWith(JwtProperties.TOKEN_PREFIX)) {
             chain.doFilter(request, response);
         } else {
             try {
                 String token = request.getHeader(JwtProperties.HEADER_STRING).replace(JwtProperties.TOKEN_PREFIX, "");
-
                 String email = JWT.require(Algorithm.HMAC512(JwtProperties.SECRET)).build().verify(token)
                         .getClaim("email").asString();
                 if (email != null) {

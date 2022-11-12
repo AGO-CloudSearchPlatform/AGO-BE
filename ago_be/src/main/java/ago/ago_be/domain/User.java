@@ -39,7 +39,7 @@ public class User {
     private Timestamp createDate;
 
     @OneToMany(mappedBy = "user")
-    private List<APILog> apiLogs = new ArrayList<>();
+    private List<Index> indices = new ArrayList<>();
 
     @Builder
     public User(Long id, String email, String password, String nickname, Authority authority, Timestamp createDate) {

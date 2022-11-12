@@ -1,5 +1,7 @@
 package ago.ago_be.config;
 
+import ago.ago_be.interceptor.APIKeyAuthorizationInterceptor;
+import ago.ago_be.interceptor.APILogInterceptor;
 import ago.ago_be.interceptor.ElasticSearchInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -12,11 +14,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    private final HandlerInterceptor esInterceptor;
+    private final APIKeyAuthorizationInterceptor apiKeyAuthorizationInterceptor;
+    private final APILogInterceptor apiLogInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(esInterceptor)
-                .addPathPatterns("/api/es/**");
+        registry.addInterceptor(apiKeyAuthorizationInterceptor)
+                .addPathPatterns("/api/v1/**");
+        registry.addInterceptor(apiLogInterceptor)
+                .addPathPatterns("/api/v2/indices/**")
+                .addPathPatterns("/api/v2/documents/**");
     }
 }
