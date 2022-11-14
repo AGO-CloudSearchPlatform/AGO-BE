@@ -1,6 +1,7 @@
 package ago.ago_be.controller.v2;
 
 import ago.ago_be.config.auth.PrincipalDetails;
+import ago.ago_be.dto.ChangeNicknameRequestDto;
 import ago.ago_be.dto.ChangePasswordRequestDto;
 import ago.ago_be.dto.UserResponseDto;
 import ago.ago_be.service.UserService;
@@ -22,8 +23,9 @@ public class UserController {
     }
 
     @PostMapping("/nickname")
-    public UserResponseDto updateNickname(@RequestBody UserResponseDto userResponseDto) {
-        return userService.changeNickname(userResponseDto);
+    public UserResponseDto updateNickname(@RequestBody ChangeNicknameRequestDto requestDto, Authentication authentication) {
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        return userService.changeNickname(principalDetails.getUser().getId(), requestDto.getPassword(), requestDto.getNewNickname());
     }
 
     @PostMapping("/password")

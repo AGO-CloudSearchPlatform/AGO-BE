@@ -30,9 +30,16 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDto changeNickname(UserResponseDto userResponseDto) {
-        User user = userRepository.findByEmail(userResponseDto.getEmail());
-        user.setNickname(userResponseDto.getNickname());
+    public UserResponseDto changeNickname(Long id, String password, String newNickname) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty()) {
+            throw new RuntimeException("로그인 유저 정보가 없습니다.");
+        }
+        User user = optionalUser.get();
+        if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("비밀번호가 맞지 않습니다.");
+        }
+        user.setNickname(newNickname);
         return UserResponseDto.builder()
                 .email(user.getEmail())
                 .nickname(user.getNickname())
