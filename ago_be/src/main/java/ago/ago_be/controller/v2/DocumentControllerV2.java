@@ -13,7 +13,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/documents")
-public class DocumentController {
+public class DocumentControllerV2 {
 
     private final DocumentService documentService;
 
@@ -35,6 +35,13 @@ public class DocumentController {
     public ResponseEntity<Map<String, Object>> bulk(@PathVariable("indexName") String indexName, @RequestBody String bulkData, Authentication authentication) {
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
         Map<String, Object> responseMap = documentService.bulk(principalDetails.getUser().getId(), indexName, bulkData);
+        return ResponseEntity.ok(responseMap);
+    }
+
+    @PostMapping("/{indexName}/search")
+    public ResponseEntity<Map<String, Object>> searchDocuments(@PathVariable("indexName") String indexName, @RequestBody Map<String, Object> query, Authentication authentication) {
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        Map<String, Object> responseMap = documentService.search(principalDetails.getUser().getId(), indexName, query);
         return ResponseEntity.ok(responseMap);
     }
 

@@ -21,11 +21,20 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.*;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.SearchModule;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -321,6 +330,70 @@ public class DocumentService {
                             }
                         }
                 }
+            }
+            client.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ElasticsearchException e) {
+            e.printStackTrace();
+        }
+        return responseMap;
+    }
+
+    public Map<String, Object> search(Long userId, String indexName, Map<String, Object> query) {
+        Index index = null;
+        User user = userRepository.findById(userId).get();
+        for (Index i : user.getIndices()) {
+            if (i.getName().equals(indexName)) {
+                index = i;
+                break;
+            }
+        }
+        // 해당 이름의 인덱스가 존재하는지 확인 및 예외처리 필요
+        Map<String, Object> responseMap = new HashMap<>();
+        RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost(elasticsearchConfig.getIp(), elasticsearchConfig.getPort(), "http")
+                )
+        );
+        String requestIndexName = "index-" + index.getId() + "-" + indexName;
+        try {
+            XContentBuilder xContentBuilder = XContentFactory.jsonBuilder();
+            xContentBuilder.map(query);
+            String json = Strings.toString(xContentBuilder);
+
+            SearchModule searchModule = new SearchModule(Settings.EMPTY, false, Collections.emptyList());
+            XContentParser parser = XContentFactory.xContent(XContentType.JSON)
+                    .createParser(new NamedXContentRegistry(searchModule.getNamedXContents()),
+                            LoggingDeprecationHandler.INSTANCE,
+                            json);
+
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.parseXContent(parser);
+
+            SearchRequest searchRequest = new SearchRequest(requestIndexName);
+            searchRequest.source(searchSourceBuilder);
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+
+            responseMap.put("took", searchResponse.getTook().getMillis());
+            responseMap.put("timed_out", searchResponse.isTimedOut());
+            SearchHits hits = searchResponse.getHits();
+            Map<String, Object> hitsMap = new HashMap<>();
+            responseMap.put("hits", hitsMap);
+            Map<String, Object> totalMap = new HashMap<>();
+            hitsMap.put("total", totalMap);
+            totalMap.put("value", hits.getTotalHits().value);
+            totalMap.put("relation", hits.getTotalHits().relation);
+            hitsMap.put("max_score", hits.getMaxScore());
+            List<Map<String, Object>> hitsList = new ArrayList<>();
+            hitsMap.put("hits", hitsList);
+            for (SearchHit hit : hits.getHits()) {
+                Map<String, Object> hitMap = new HashMap<>();
+                hitMap.put("index", indexName);
+                hitMap.put("id", hit.getId());
+                hitMap.put("score", hit.getScore());
+                hitMap.put("source", hit.getSourceAsMap());
+                hitsList.add(hitMap);
             }
             client.close();
         } catch (IOException e) {

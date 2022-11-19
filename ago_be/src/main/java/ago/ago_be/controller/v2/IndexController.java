@@ -43,13 +43,6 @@ public class IndexController {
         return ResponseEntity.ok(responseMap);
     }
 
-    @PostMapping("/{indexName}/search")
-    public ResponseEntity<Map<String, Object>> searchDocuments(@PathVariable("indexName") String indexName, @RequestBody Map<String, Object> query, Authentication authentication) {
-        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
-        Map<String, Object> responseMap = indexService.search(principalDetails.getUser().getId(), indexName, query);
-        return ResponseEntity.ok(responseMap);
-    }
-
     @PutMapping("/{indexName}/mapping")
     public ResponseEntity<Map<String, Boolean>> addMapping(@PathVariable("indexName") String indexName, @RequestBody Map<String, Object> mappings, Authentication authentication) {
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();

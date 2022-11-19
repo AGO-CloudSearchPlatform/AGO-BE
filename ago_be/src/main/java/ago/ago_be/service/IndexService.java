@@ -146,80 +146,37 @@ public class IndexService {
                 )
         );
         String requestIndexName = "index-" + index.getId() + "-" + indexName;
-        System.out.println("requestIndexName = " + requestIndexName);
-        CreateIndexRequest request = new CreateIndexRequest(requestIndexName);
-        request.mapping(mappings);
         try {
+
+            CreateIndexRequest request = new CreateIndexRequest(requestIndexName);
+
+            //Default Setting
+            XContentBuilder settingBuilder = XContentFactory.jsonBuilder()
+                    .startObject()
+                        .startObject("analysis")
+                            .startObject("tokenizer")
+                                .startObject("nori_mixed_tokenizer")
+                                    .field("type", "nori_tokenizer")
+                                    .field("decompound_mode", "mixed")
+                                .endObject()
+                            .endObject()
+                            .startObject("analyzer")
+                                .startObject("nori_token_analyzer")
+                                    .field("tokenizer", "nori_mixed_tokenizer")
+                                    .array("filter", "lowercase")
+                                .endObject()
+                            .endObject()
+                        .endObject()
+                    .endObject();
+
+            request.settings(settingBuilder);
+            request.mapping(mappings);
             CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
             responseMap.put("acknowledged", createIndexResponse.isAcknowledged());
             responseMap.put("index", indexName);
             client.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-        return responseMap;
-    }
-
-    public Map<String, Object> search(Long userId, String indexName, Map<String, Object> query) {
-        Index index = null;
-        User user = userRepository.findById(userId).get();
-        for (Index i : user.getIndices()) {
-            if (i.getName().equals(indexName)) {
-                index = i;
-                break;
-            }
-        }
-        // 해당 이름의 인덱스가 존재하는지 확인 및 예외처리 필요
-        Map<String, Object> responseMap = new HashMap<>();
-        RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost(elasticsearchConfig.getIp(), elasticsearchConfig.getPort(), "http")
-                )
-        );
-        String requestIndexName = "index-" + index.getId() + "-" + indexName;
-        try {
-            XContentBuilder xContentBuilder = XContentFactory.jsonBuilder();
-            xContentBuilder.map(query);
-            String json = Strings.toString(xContentBuilder);
-
-            SearchModule searchModule = new SearchModule(Settings.EMPTY, false, Collections.emptyList());
-            XContentParser parser = XContentFactory.xContent(XContentType.JSON)
-                    .createParser(new NamedXContentRegistry(searchModule.getNamedXContents()),
-                            LoggingDeprecationHandler.INSTANCE,
-                            json);
-
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.parseXContent(parser);
-
-            SearchRequest searchRequest = new SearchRequest(requestIndexName);
-            searchRequest.source(searchSourceBuilder);
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-
-            responseMap.put("took", searchResponse.getTook().getMillis());
-            responseMap.put("timed_out", searchResponse.isTimedOut());
-            SearchHits hits = searchResponse.getHits();
-            Map<String, Object> hitsMap = new HashMap<>();
-            responseMap.put("hits", hitsMap);
-            Map<String, Object> totalMap = new HashMap<>();
-            hitsMap.put("total", totalMap);
-            totalMap.put("value", hits.getTotalHits().value);
-            totalMap.put("relation", hits.getTotalHits().relation);
-            hitsMap.put("max_score", hits.getMaxScore());
-            List<Map<String, Object>> hitsList = new ArrayList<>();
-            hitsMap.put("hits", hitsList);
-            for (SearchHit hit : hits.getHits()) {
-                Map<String, Object> hitMap = new HashMap<>();
-                hitMap.put("index", indexName);
-                hitMap.put("id", hit.getId());
-                hitMap.put("score", hit.getScore());
-                hitMap.put("source", hit.getSourceAsMap());
-                hitsList.add(hitMap);
-            }
-            client.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ElasticsearchException e) {
-            e.printStackTrace();
         }
         return responseMap;
     }
